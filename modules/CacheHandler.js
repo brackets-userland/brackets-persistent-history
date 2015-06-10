@@ -101,26 +101,21 @@ define(function (require, exports, module) {
       });
     });
   }
-
+  
   /*
    * @public
-   * @method unwatchCacheFolder
-   * @description Unwatches the cache folder on load
+   * @method getCacheDirPath
+   * @description Get current cache directory path
+   * @returns {String} cacheDirPath Path to current cache directory
    */
-  function unwatchCacheFolder() {
-    FileSystem.resolve(cacheDirPath, function (err, tmpDir) {
-      if (err) {
-        return err; 
-      }
-      FileSystem.unwatch(tmpDir);
-    });
-
+  function getCacheDirPath() {
+    return cacheDirPath; 
   }
-
+  
   exports.loadCopyFromCache   = loadCopyFromCache;
   exports.saveCopyToCache     = saveCopyToCache;
   exports.deleteCacheFile     = deleteCacheFile;
   exports.cleanCacheFolder    = cleanCacheFolder;
-  exports.unwatchCacheFolder  = unwatchCacheFolder;
+  exports.getCacheDirPath     = getCacheDirPath;
 
 });
