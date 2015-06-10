@@ -1,4 +1,12 @@
-define(function (require) {
+require.config({
+  paths: {
+    "text" : "lib/text",
+    "i18n" : "lib/i18n"
+  },
+  locale: brackets.getLocale()
+});
+
+define(function (require, exports, module) {
   "use strict";
 
   var AppInit                   = brackets.getModule("utils/AppInit");
@@ -8,6 +16,7 @@ define(function (require) {
   var MainViewManager           = brackets.getModule("view/MainViewManager");
   var PreferencesManager        = brackets.getModule("preferences/PreferencesManager");
 
+  var Strings                   = require("strings");
   var packageJSON               = require("text!package.json");
   var COMMAND_ID                = JSON.parse(packageJSON).name;
   var prefs                     = PreferencesManager.getExtensionPrefs(COMMAND_ID);
