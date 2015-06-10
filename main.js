@@ -7,6 +7,7 @@ define(function (require) {
   var FileUtils                 = brackets.getModule("file/FileUtils");
   var MainViewManager           = brackets.getModule("view/MainViewManager");
   var PreferencesManager        = brackets.getModule("preferences/PreferencesManager");
+  var ProjectManager            = brackets.getModule("project/ProjectManager");
 
   var packageJSON               = require("text!package.json");
   var COMMAND_ID                = JSON.parse(packageJSON).name;
@@ -51,11 +52,11 @@ define(function (require) {
 
   /* 
    * @private 
-   * @method _loadDocumentHistory
+   * @method _onGainingEditorFocus
    * @description Diff the current document against cached file, then load the history
    * @param {Editor} editor Editor that gains focus
    */
-  function _loadOnActiveEditorChange(editor) {
+  function _onGainingEditorFocus(editor) {
     if (!editor) {
       return; 
     }
@@ -102,7 +103,7 @@ define(function (require) {
    * @method _saveOnActiveEditorChange
    * @description Calls _saveDocumentHistory relative to the editor that is currently losing focus
    */
-  function _saveOnActiveEditorChange(editor) {
+  function _onLosingEditorFocus(editor) {
     if (!editor) {
       return;
     }
@@ -131,6 +132,7 @@ define(function (require) {
 
     if (history) {
       delete documentHistories[path];
+      CacheHandler.deleteCacheFile(path);
       stateManager.set("documentHistories", documentHistories);
     }
 
@@ -153,7 +155,6 @@ define(function (require) {
     }
   }
 
-
   /* 
    * @private
    * @method _bindEventHandlers()
@@ -162,15 +163,22 @@ define(function (require) {
   function _bindEventHandlers() {
 
     EditorManager.on("activeEditorChange.persistHistory", function (evt, editorGainingFocus, editorLosingFocus) {
-      _loadOnActiveEditorChange(editorGainingFocus);
-      _saveOnActiveEditorChange(editorLosingFocus);
+      _onGainingEditorFocus(editorGainingFocus);
+      _onLosingEditorFocus(editorLosingFocus);
     });
 
     DocumentManager.on("pathDeleted.persistHistory", function (evt, path) {
-      _detachDocumentHistory(path); 
+      if (path.indexOf("petetnt.brackets-persistent-history/modules/cache/") === -1) {
+        _detachDocumentHistory(path); 
+      }
     });
 
     DocumentManager.on("fileNameChange.persistHistory", _renameDocumentHistoryPathOnFileRename);
+    
+    ProjectManager.on("beforeProjectClose.persistHistory", function () {
+      var editor = EditorManager.getActiveEditor();
+      _onLosingEditorFocus(editor);
+    });
   }
 
   /*
@@ -181,6 +189,7 @@ define(function (require) {
   function _unbindExtensionEventHandlers() {
     EditorManager.off("activeEditorChange.persistHistory");
     DocumentManager.off("pathDeleted.persistHistory fileNameChange.persistHistory");
+    ProjectManager.off("beforeProjectClose.persistHistory");
   }
 
   /* Define preferences */
@@ -192,8 +201,11 @@ define(function (require) {
     }
   });
 
-  prefs.definePreference("cacheTimeToLiveInDays", "number", 14);
+  prefs.definePreference("cacheTimeToLiveInDays", "number", prefs.get("cacheTimeToLiveInDays") || 14);
 
-  /* Init */
-  AppInit.extensionsLoaded(CacheHandler.cleanCacheFolder);
+  /* Init cache after extensions loaded */
+  AppInit.extensionsLoaded(function () {
+    CacheHandler.unwatchCacheFolder();
+    CacheHandler.cleanCacheFolder();
+  });
 });
