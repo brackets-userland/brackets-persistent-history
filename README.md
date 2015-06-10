@@ -35,7 +35,7 @@ Following configuration options are available (under `petetnt.brackets-persisten
 
 ## TODO
 
-[ ] Create unit tests
+- [ ] Create unit tests
 
 ## Contributing
 Contributions are welcome! Just open a new issue and/or send a pull request.
