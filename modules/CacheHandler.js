@@ -30,10 +30,10 @@ define(function (require, exports, module) {
         return dfd.resolve(file);
       }
     });
-    
+
     return dfd;
   } 
-  
+
   /*
    * @public
    * @method saveCopyToCache
@@ -58,12 +58,34 @@ define(function (require, exports, module) {
 
   /*
    * @public
-   * @method _cleanCacheFolder
+   * @method deleteCacheFile
+   * @description If the file had been cached previously, delete it
+   * @returns {Deferred} dfd Resolves regardless after the file has been resolved.
+   */
+  function deleteCacheFile(path) {
+    var dfd = new $.Deferred();
+    var sha1 = crypto.hex_sha1(path).substring(0, 10); // jshint ignore:line
+    var fileToDeletePath = cacheDirPath + sha1 + ".tmp";
+    FileSystem.resolve(fileToDeletePath, function (err, file) {
+      if (err) {
+        return dfd.resolve();
+      } else {
+        ProjectManager.deleteItem(file);
+        return dfd.resolve();
+      }
+    });
+    return dfd;
+  }
+
+  /*
+   * @public
+   * @method cleanCacheFolder
    * @description clean cache folder for files that are older than 14 days.
    */
   function cleanCacheFolder() {
     var tmpDir = FileSystem.getDirectoryForPath(cacheDirPath);
     tmpDir.getContents(function (err, contents, contentsStats) {
+
       if (err) {
         console.log(err); 
       }
@@ -80,8 +102,25 @@ define(function (require, exports, module) {
     });
   }
 
-  exports.loadCopyFromCache = loadCopyFromCache;
-  exports.saveCopyToCache   = saveCopyToCache;
-  exports.cleanCacheFolder  = cleanCacheFolder;
+  /*
+   * @public
+   * @method unwatchCacheFolder
+   * @description Unwatches the cache folder on load
+   */
+  function unwatchCacheFolder() {
+    FileSystem.resolve(cacheDirPath, function (err, tmpDir) {
+      if (err) {
+        return err; 
+      }
+      FileSystem.unwatch(tmpDir);
+    });
+
+  }
+
+  exports.loadCopyFromCache   = loadCopyFromCache;
+  exports.saveCopyToCache     = saveCopyToCache;
+  exports.deleteCacheFile     = deleteCacheFile;
+  exports.cleanCacheFolder    = cleanCacheFolder;
+  exports.unwatchCacheFolder  = unwatchCacheFolder;
 
 });
