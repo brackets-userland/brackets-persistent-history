@@ -6,12 +6,7 @@ Created to supplement [this Trello card (Local history versioning).](https://tre
 ## How does it work?
 
 ### Saving history
-When a file has been edited (so that it's CodeMirror history has been modified) and the user either 
-* switches active editor
-* switches project 
-* closes Brackets
-
-following happens:
+When a file has been edited (so that it's CodeMirror history has been modified) and user saves the current file following happens:
 
 * the actual history is saved to `state.json` (key is the full path)
 * a cached version the file is saved to `modules/cache` (as `first-10-letters of path-converted-to-sha-1.tmp`)

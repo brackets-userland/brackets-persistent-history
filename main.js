@@ -7,7 +7,6 @@ define(function (require) {
   var FileUtils                 = brackets.getModule("file/FileUtils");
   var MainViewManager           = brackets.getModule("view/MainViewManager");
   var PreferencesManager        = brackets.getModule("preferences/PreferencesManager");
-  var ProjectManager            = brackets.getModule("project/ProjectManager");
 
   var packageJSON               = require("text!package.json");
   var COMMAND_ID                = JSON.parse(packageJSON).name;
@@ -18,7 +17,7 @@ define(function (require) {
   var DiffHandler               = require("modules/DiffHandler");
 
   /* 
-   * @private 
+   * @private
    * @method _loadDocumentHistory
    * @description Loads the documents history from state if it exists.
    * @params {CodeMirrorDocument} codeMirrorDoc Code Mirror document to set the history to
@@ -103,7 +102,9 @@ define(function (require) {
    * @method _saveOnActiveEditorChange
    * @description Calls _saveDocumentHistory relative to the editor that is currently losing focus
    */
-  function _onLosingEditorFocus(editor) {
+  function _onDocumentSaved(evt, document) {
+    var editor = document._masterEditor;
+
     if (!editor) {
       return;
     }
@@ -162,23 +163,20 @@ define(function (require) {
    */
   function _bindEventHandlers() {
 
-    EditorManager.on("activeEditorChange.persistHistory", function (evt, editorGainingFocus, editorLosingFocus) {
+    EditorManager.on("activeEditorChange.persistHistory", function (evt, editorGainingFocus) {
       _onGainingEditorFocus(editorGainingFocus);
-      _onLosingEditorFocus(editorLosingFocus);
     });
+    
+    DocumentManager.on("documentSaved.persistHistory", _onDocumentSaved);
 
     DocumentManager.on("pathDeleted.persistHistory", function (evt, path) {
-      if (path.indexOf("petetnt.brackets-persistent-history/modules/cache/") === -1) {
+      if (path.indexOf(CacheHandler.getCacheDirPath()) === -1) {
         _detachDocumentHistory(path); 
       }
     });
 
     DocumentManager.on("fileNameChange.persistHistory", _renameDocumentHistoryPathOnFileRename);
     
-    ProjectManager.on("beforeProjectClose.persistHistory", function () {
-      var editor = EditorManager.getActiveEditor();
-      _onLosingEditorFocus(editor);
-    });
   }
 
   /*
@@ -188,8 +186,7 @@ define(function (require) {
    */ 
   function _unbindExtensionEventHandlers() {
     EditorManager.off("activeEditorChange.persistHistory");
-    DocumentManager.off("pathDeleted.persistHistory fileNameChange.persistHistory");
-    ProjectManager.off("beforeProjectClose.persistHistory");
+    DocumentManager.off("pathDeleted.persistHistory fileNameChange.persistHistory pathDeleted.persistHistory");
   }
 
   /* Define preferences */
@@ -203,9 +200,8 @@ define(function (require) {
 
   prefs.definePreference("cacheTimeToLiveInDays", "number", prefs.get("cacheTimeToLiveInDays") || 14);
 
-  /* Init cache after extensions loaded */
+  /* Init */
   AppInit.extensionsLoaded(function () {
-    CacheHandler.unwatchCacheFolder();
     CacheHandler.cleanCacheFolder();
   });
 });
