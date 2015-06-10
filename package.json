@@ -1,6 +1,6 @@
 {
   "name": "petetnt.brackets-persistent-history",
-  "title": "Brackets Persistent history",
+  "title": "Brackets Persistent History",
   "description": "Extension that saves editing history between changing projects or closing Brackets.",
   "repository": "https://github.com/petetnt/brackets-persistent-history",
   "homepage": "https://github.com/petetnt/brackets-persistent-history",
