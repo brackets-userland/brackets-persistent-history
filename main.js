@@ -32,11 +32,19 @@ define(function (require) {
       if (history) {        
         history = JSON.parse(history);
         
+        // Set editor value to cachedDoc before setting history and then set the value back to the modified file
+        // so that the history applies to the modified document too.
         if (wasModified) {
-          console.log("was modifed outside of Brackets, should invalidate redos and and do so that one CTRL+Z brings doc to cachedDoc-state");
+          
+          var currentDoc = codeMirrorDoc.getValue();
+          codeMirrorDoc.setValue(cachedDoc);
+          codeMirrorDoc.setHistory(history);
+          codeMirrorDoc.setValue(currentDoc);
+          
+        } else {
+          codeMirrorDoc.setHistory(history);          
         }
         
-        codeMirrorDoc.setHistory(history);
       }
     } 
   }
